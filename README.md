@@ -8,19 +8,51 @@ Múltiples usuarios con autenticación JWT.
 
 Misma arquitectura en capas que el proyecto de inventario:
 
-```
-Frontend (HTML/JS)
-      ↓
-Controller (REST API)
-      ↓
-Service (lógica de negocio)
-      ↓
-Repository (Spring Data JPA)
-      ↓
-Base de datos (MySQL)
+```mermaid
+flowchart TD
+    A[Frontend HTML/JS] -->|peticiones HTTP fetch| B[Controller - REST API]
+    B --> C[Service - lógica de negocio]
+    C --> D[Repository - Spring Data JPA]
+    D --> E[(Base de datos MySQL)]
 ```
 
 ## Modelo de datos
+
+```mermaid
+erDiagram
+    ROL ||--o{ USUARIO : tiene
+    USUARIO ||--o{ CATEGORIA : define
+    CATEGORIA ||--o{ PRESUPUESTO : limita
+    CATEGORIA ||--o{ TRANSACCION : clasifica
+    USUARIO ||--o{ TRANSACCION : registra
+
+    ROL {
+        Long id
+        String nombre
+    }
+    USUARIO {
+        Long id
+        String nombre
+        String email
+        String password
+    }
+    CATEGORIA {
+        Long id
+        String nombre
+        String tipo
+    }
+    PRESUPUESTO {
+        Long id
+        Double montoLimite
+        String mes
+    }
+    TRANSACCION {
+        Long id
+        Double monto
+        String descripcion
+        LocalDateTime fecha
+    }
+```
 
 - **Usuario** — pertenece a un **Rol**
 - **Categoría** — de tipo INGRESO o GASTO, pertenece a un usuario (cada quien define las suyas)
