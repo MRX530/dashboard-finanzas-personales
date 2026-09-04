@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Finanzas - Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 40px auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f3f4f6; }
+        .gasto { color: #dc2626; }
+        .ingreso { color: #16a34a; }
+        input, select { padding: 6px; margin: 4px 4px 4px 0; }
+        button { padding: 8px 14px; background: #16a34a; color: white; border: none; cursor: pointer; }
+        .form-box { background: #f9fafb; padding: 15px; border-radius: 6px; margin-bottom: 20px; }
+        .alerta { background: #fef2f2; border: 1px solid #dc2626; color: #991b1b; padding: 10px; border-radius: 6px; margin-top: 10px; }
+        .ok { background: #f0fdf4; border: 1px solid #16a34a; color: #166534; padding: 10px; border-radius: 6px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Dashboard <span style="font-size:14px; color:#666;" id="usuarioActual"></span></h2>
+
+    <div class="form-box">
+        <h3>Nueva transacción</h3>
+        <input id="monto" type="number" placeholder="Monto">
+        <input id="categoriaId" type="number" placeholder="ID Categoría">
+        <input id="descripcion" placeholder="Descripción">
+        <button onclick="registrarTransaccion()">Registrar</button>
+        <div id="resultado"></div>
+    </div>
+
+    <table id="tabla">
+        <thead>
+            <tr><th>ID</th><th>Categoría</th><th>Monto</th><th>Descripción</th><th>Fecha</th></tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
+
+    <script src="js/api.js"></script>
+    <script>
+        document.getElementById('usuarioActual').innerText =
+            '— ' + (sessionStorage.getItem('usuarioNombre') || 'invitado');
+
+        const usuarioId = sessionStorage.getItem('usuarioId');
+
+        async function cargarTransacciones() {
+            const transacciones = await apiGet('/transacciones/usuario/' + usuarioId);
+            const tbody = document.getElementById('tbody');
+            tbody.innerHTML = '';
+            transacciones.forEach(t => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${t.id}</td>
+                        <td>${t.categoria.nombre}</td>
+                        <td class="${t.categoria.tipo === 'GASTO' ? 'gasto' : 'ingreso'}">
+                            ${t.categoria.tipo === 'GASTO' ? '-' : '+'}$${t.monto}
+                        </td>
+                        <td>${t.descripcion || ''}</td>
+                        <td>${new Date(t.fecha).toLocaleDateString()}</td>
+                    </tr>`;
+            });
+        }
+
+        async function registrarTransaccion() {
+            const transaccion = {
+                usuario: { id: parseInt(usuarioId) },
+                categoria: { id: parseInt(document.getElementById('categoriaId').value) },
+                monto: parseFloat(document.getElementById('monto').value),
+                descripcion: document.getElementById('descripcion').value
+            };
+
+            const resultadoDiv = document.getElementById('resultado');
+            try {
+                const resultado = await apiPost('/transacciones', transaccion);
+
+                if (resultado.limitePresupuesto) {
+                    const porcentaje = resultado.porcentajeUsado.toFixed(0);
+                    if (resultado.presupuestoExcedido) {
+                        resultadoDiv.innerHTML = `<div class="alerta">
+                            ⚠ Te pasaste del presupuesto: $${resultado.totalGastadoEnCategoria} de $${resultado.limitePresupuesto} (${porcentaje}%)
+                        </div>`;
+                    } else {
+                        resultadoDiv.innerHTML = `<div class="ok">
+                            Vas en $${resultado.totalGastadoEnCategoria} de $${resultado.limitePresupuesto} (${porcentaje}%)
+                        </div>`;
+                    }
+                } else {
+                    resultadoDiv.innerHTML = '';
+                }
+
+                cargarTransacciones();
+            } catch (err) {
+                resultadoDiv.innerHTML = `<div class="alerta">${err.message}</div>`;
+            }
+        }
+
+        cargarTransacciones();
+    </script>
+</body>
+</html>

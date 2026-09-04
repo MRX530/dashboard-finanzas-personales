@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Finanzas - Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 400px; margin: 80px auto; }
+        input { width: 100%; padding: 8px; margin: 6px 0; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background: #16a34a; color: white; border: none; cursor: pointer; }
+        #error { color: red; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h2>Iniciar sesión — Finanzas</h2>
+    <input type="email" id="email" placeholder="Correo">
+    <input type="password" id="password" placeholder="Contraseña">
+    <button onclick="login()">Entrar</button>
+    <p id="error"></p>
+
+    <script src="js/api.js"></script>
+    <script>
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            try {
+                const usuario = await apiPost('/usuarios/login', { email, password });
+                sessionStorage.setItem('token', usuario.token);
+                sessionStorage.setItem('usuarioId', usuario.id);
+                sessionStorage.setItem('usuarioNombre', usuario.nombre);
+                window.location.href = 'dashboard.html';
+            } catch (err) {
+                document.getElementById('error').innerText = 'Credenciales inválidas';
+            }
+        }
+    </script>
+</body>
+</html>
