@@ -1,12 +1,12 @@
 # Dashboard de Finanzas Personales
 
-Proyecto de portafolio: sistema web genérico para registrar ingresos y gastos,
+sistema web para registrar ingresos y gastos,
 con presupuestos por categoría y alertas cuando se excede el límite mensual.
 Múltiples usuarios con autenticación JWT.
 
 ## Arquitectura
 
-Misma arquitectura en capas que el proyecto de inventario:
+Arquitectura en capas:
 
 ```mermaid
 flowchart TD
@@ -59,7 +59,7 @@ erDiagram
 - **Presupuesto** — límite mensual (`mes` en formato "2026-09") para una categoría de tipo GASTO
 - **Transacción** — cada movimiento de dinero: monto, categoría, fecha, descripción
 
-## La regla de negocio central (lo que diferencia este proyecto)
+## La regla de negocio
 
 En `TransaccionService.registrarTransaccion()`:
 
@@ -72,14 +72,8 @@ En `TransaccionService.registrarTransaccion()`:
 4. El resultado (`TransaccionResultado`) incluye el porcentaje usado y si se
    excedió el límite — el frontend usa esto para mostrar una alerta visual
 
-Esta diferencia de diseño frente al proyecto de inventario (bloquear vs. solo
-alertar) es un buen punto para explicar en una entrevista: muestra que entiendes
-que la regla de negocio depende del dominio, no es un patrón que se copia igual
-en todos lados.
-
 ## Seguridad
 
-Misma implementación que el proyecto de inventario:
 - **BCrypt** para encriptar contraseñas (`UsuarioService`)
 - **JWT** para autenticación stateless (`JwtUtil` + `JwtAuthFilter`)
 - Rutas públicas: `POST /api/usuarios/login` y `POST /api/usuarios/registro`;
@@ -139,9 +133,3 @@ finanzas-app/
 excede, gasto sin presupuesto definido (no debe fallar), e ingresos (que nunca
 deben consultar presupuestos).
 
-## Próximos pasos sugeridos
-
-- Paginación en `GET /api/transacciones/usuario/{id}` (igual que se hizo en inventario)
-- Endpoint de resumen mensual agrupado por categoría (para graficar en el frontend)
-- Mover la clave JWT a variable de entorno
-- Roles: que un usuario no pueda ver transacciones de otro usuario
